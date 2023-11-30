@@ -78,22 +78,57 @@ class Generator(nn.Module):
 ##############################
 class Discriminator(nn.Module):
     def __init__(self, in_channels=3):
-        super(Discriminator, self).__init__()
-        """ The discriminator used in both cVAE-GAN and cLR-GAN
-            
-            Args in constructor: 
-                in_channels: number of channel in image (default: 3 for RGB)
+          super(Discriminator, self).__init__()
+          """ The discriminator used in both cVAE-GAN and cLR-GAN
+          This code implements a 70x70 patchGAN
 
-            Args in forward function: 
-                x: image input (real_B, fake_B)
- 
-            Returns: 
-                discriminator output: could be a single value or a matrix depending on the type of GAN
-        """
+              Args in constructor:
+                  in_channels: number of channel in image (default: 3 for RGB)
+
+              Args in forward function:
+                  x: image input (real_B, fake_B)
+
+              Returns:
+                  discriminator output: could be a single value or a matrix depending on the type of GAN
+          """
+          # Convolutional layers
+          self.conv1 = nn.Conv2d(in_channels, 64, kernel_size=4, stride=2, padding=1)
+          self.conv2 = nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1)
+          self.conv3 = nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1)
+          self.conv4 = nn.Conv2d(256, 512, kernel_size=4, stride=1, padding=1)
+
+          # Final convolutional layer for patch classification
+          self.patch_classifier = nn.Conv2d(512, 1, kernel_size=4, stride=1, padding=1)
+
+          # Activation function (Leaky ReLU)
+          self.leaky_relu = nn.LeakyReLU(0.2, inplace=True)
+
+          # Batch normalization
+          self.batch_norm2d_1 = nn.BatchNorm2d(128)
+          self.batch_norm2d_2 = nn.BatchNorm2d(256)
+
+          # Number of patches to classify
 
     def forward(self, x):
+          x = self.leaky_relu(self.conv1(x))
+          x = self.leaky_relu(self.batch_norm2d_1(self.conv2(x)))
+          x = self.leaky_relu(self.batch_norm2d_2(self.conv3(x)))
+          x = self.leaky_relu(self.conv4(x))
+          
+          # Patch classification
+          patch_scores = self.patch_classifier(x)
 
-        return 
+          return patch_scores
+if __name__ == "__main__":
+
+    def test_discriminator():
+        D = Discriminator()
+        im_test = torch.randn((4,3,256,256))
+        res = D(im_test)
+        print(res.shape)
+    
+    
+
 
 
 
