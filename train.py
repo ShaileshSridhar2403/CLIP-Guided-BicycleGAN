@@ -87,6 +87,7 @@ for e in range(num_epochs):
 		#  Train Generator and Encoder
 		#------------------------------
 
+		
 
 
 
