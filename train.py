@@ -74,10 +74,10 @@ for e in range(num_epochs):
 		edge_tensor, rgb_tensor = norm(edge_tensor).to(gpu_id), norm(rgb_tensor).to(gpu_id)
 		real_A = edge_tensor; real_B = rgb_tensor;
 
-		z_encoded =  encoder(real_A)
-		fake_B_vae = generator(edge_tensor,z_encoded)
+		z_encoded =  encoder(real_B)
+		fake_B_vae = generator(real_A,z_encoded)
 		z_random = torch.randn_like(z_encoded)
-		fake_B_clr = generator(edge_tensor,z_random)
+		fake_B_clr = generator(real_A,z_random)
 	
 		
 	
