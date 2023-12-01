@@ -13,29 +13,35 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         """ The encoder used in both cVAE-GAN and cLR-GAN, which encode image B or B_hat to latent vector
             This encoder uses resnet-18 to extract features, and further encode them into a distribution
-            similar to VAE encoder. 
+            similar to VAE encoder.
 
             Note: You may either add "reparametrization trick" and "KL divergence" or in the train.py file
-            
-            Args in constructor: 
-                latent_dim: latent dimension for z 
-  
-            Args in forward function: 
+
+            Args in constructor:
+                latent_dim: latent dimension for z
+
+            Args in forward function:
                 img: image input (from domain B)
 
-            Returns: 
-                mu: mean of the latent code 
-                logvar: sigma of the latent code 
+            Returns:
+                mu: mean of the latent code
+                logvar: sigma of the latent code
         """
 
         # Extracts features at the last fully-connected
-        resnet18_model = resnet18(pretrained=True)      
+        resnet18_model = resnet18(pretrained=True)
         self.feature_extractor = nn.Sequential(*list(resnet18_model.children())[:-3])
         self.pooling = nn.AvgPool2d(kernel_size=8, stride=8, padding=0)
 
         # Output is mu and log(var) for reparameterization trick used in VAEs
         self.fc_mu = nn.Linear(256, latent_dim)
         self.fc_logvar = nn.Linear(256, latent_dim)
+    
+    def reparameterization(self, mean, log_var):
+        std = torch.exp(0.5 * log_var)
+        eps = torch.randn_like(std)
+        z = mean + eps * std
+        return z
 
     def forward(self, img):
         out = self.feature_extractor(img)
@@ -43,7 +49,9 @@ class Encoder(nn.Module):
         out = out.view(out.size(0), -1)
         mu = self.fc_mu(out)
         logvar = self.fc_logvar(out)
-        return mu, logvar
+        z = self.reparameterization(mu,logvar)
+
+        return z
 
 
 ##############################
@@ -127,7 +135,7 @@ if __name__ == "__main__":
         res = D(im_test)
         print(res.shape)
     
-    
+
 
 
 
