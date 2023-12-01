@@ -15,15 +15,17 @@ import pdb
 # (You may put your needed configuration here. Please feel free to add more or use argparse. )
 img_dir = '/home/zlz/BicycleGAN/datasets/edges2shoes/train/'
 img_shape = (3, 128, 128) # Please use this image dimension faster training purpose
-num_epochs =
-batch_size =
-lr_rate =   	      # Adam optimizer learning rate
-betas = 			  # Adam optimizer beta 1, beta 2
-lambda_pixel =        # Loss weights for pixel loss
-lambda_latent =       # Loss weights for latent regression
-lambda_kl =           # Loss weights for kl divergence
-latent_dim =          # latent dimension for the encoded images from domain B
-gpu_id =
+num_epochs = 2
+batch_size = 1
+lr_rate = 0.0002  	      # Adam optimizer learning rate
+betas = (0.5, 0.999)			  # Adam optimizer beta 1, beta 2
+lambda_pixel =  10      # Loss weights for pixel loss
+lambda_latent = 0.5    # Loss weights for latent regression
+lambda_kl =  0.01      # Loss weights for kl divergence
+latent_dim =   8       # latent dimension for the encoded images from domain B
+gpu_id = '0'
+
+#NOTE: Currently using only single learning rate, can change this
 
 # Normalize image tensor
 def norm(image):
