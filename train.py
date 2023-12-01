@@ -11,19 +11,19 @@ import torch
 import time
 import pdb
 
-# Training Configurations 
+# Training Configurations
 # (You may put your needed configuration here. Please feel free to add more or use argparse. )
 img_dir = '/home/zlz/BicycleGAN/datasets/edges2shoes/train/'
 img_shape = (3, 128, 128) # Please use this image dimension faster training purpose
-num_epochs =  
-batch_size = 
+num_epochs =
+batch_size =
 lr_rate =   	      # Adam optimizer learning rate
 betas = 			  # Adam optimizer beta 1, beta 2
 lambda_pixel =        # Loss weights for pixel loss
-lambda_latent =       # Loss weights for latent regression 
+lambda_latent =       # Loss weights for latent regression
 lambda_kl =           # Loss weights for kl divergence
 latent_dim =          # latent dimension for the encoded images from domain B
-gpu_id = 
+gpu_id =
 
 # Normalize image tensor
 def norm(image):
@@ -33,7 +33,7 @@ def norm(image):
 def denorm(tensor):
 	return ((tensor+1.0)/2.0)*255.0
 
-# Reparameterization helper function 
+# Reparameterization helper function
 # (You may need this helper function here or inside models.py, depending on your encoder implementation)
 
 
@@ -46,6 +46,7 @@ loader = data.DataLoader(dataset, batch_size=batch_size)
 
 # Loss functions
 mae_loss = torch.nn.L1Loss().to(gpu_id)
+mse_loss = torch.nn.MSELoss().to(gpu_id)
 
 # Define generator, encoder and discriminators
 generator = Generator(latent_dim, img_shape).to(gpu_id)
@@ -73,20 +74,40 @@ for e in range(num_epochs):
 		edge_tensor, rgb_tensor = norm(edge_tensor).to(gpu_id), norm(rgb_tensor).to(gpu_id)
 		real_A = edge_tensor; real_B = rgb_tensor;
 
+		z_encoded =  encoder(real_A)
+		fake_B_vae = generator(edge_tensor,z_encoded)
+		z_random = torch.randn_like(z_encoded)
+		fake_B_clr = generator(edge_tensor,z_random)
+	
+		
+	
+		#NOTE: Using same data for clrGAN and VAEGAN here. This is against recommendation of eveningglow
+		
 		#-------------------------------
 		#  Train Generator and Encoder
 		#------------------------------
 
 
-		
+
 
 
 		#----------------------------------
 		#  Train Discriminator (cVAE-GAN)
 		#----------------------------------
-
-
 		
+		
+		real_D_VAE_scores = D_VAE(real_B)
+		fake_D_VAE_scores = D_VAE(fake_B_vae)
+	
+
+
+		D_loss_cVAE = mse_loss(real_D_VAE_scores,torch.ones_like(real_D_VAE_scores)) + mse_loss(fake_D_VAE_scores,torch.zeros_like(real_D_VAE_scores))
+	
+
+
+
+
+
 
 
 		#---------------------------------
@@ -94,17 +115,10 @@ for e in range(num_epochs):
 		#---------------------------------
 
 
-		
 
 
-		""" Optional TODO: 
+
+		""" Optional TODO:
 			1. You may want to visualize results during training for debugging purpose
 			2. Save your model every few iterations
 		"""
-		
-
-
-
-
-
-
