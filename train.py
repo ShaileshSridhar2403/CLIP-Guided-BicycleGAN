@@ -70,7 +70,9 @@ total_steps = len(loader)*num_epochs; step = 0
 for e in range(num_epochs):
 	start = time.time()
 	for idx, data in enumerate(loader):
+		
 
+		#NOTE: Do a zero grad here somewhere
 		########## Process Inputs ##########
 		edge_tensor, rgb_tensor = data
 		edge_tensor, rgb_tensor = norm(edge_tensor).to(gpu_id), norm(rgb_tensor).to(gpu_id)
@@ -105,7 +107,18 @@ for e in range(num_epochs):
 
 
 		D_loss_cVAE = mse_loss(real_D_VAE_scores,torch.ones_like(real_D_VAE_scores)) + mse_loss(fake_D_VAE_scores,torch.zeros_like(real_D_VAE_scores))
-	
+
+		real_D_LR_scores = D_LR(real_B)
+		fake_D_LR_scores = D_LR(fake_B_clr)
+
+		D_loss_cLR = mse_loss(real_D_LR_scores,torch.ones_like(real_D_LR_scores)) + mse_loss(fake_D_LR_scores,torch.zeros_like(real_D_LR_scores))
+
+		D_loss = D_loss_cVAE + D_loss_cLR
+
+		D_loss.backward()
+
+		optimizer_D_LR.step()
+		optimizer_D_VAE.step()
 
 
 
@@ -125,3 +138,5 @@ for e in range(num_epochs):
 			1. You may want to visualize results during training for debugging purpose
 			2. Save your model every few iterations
 		"""
+if __name__ == "__main__":
+	pass
