@@ -76,6 +76,24 @@ for e in range(num_epochs):
 		edge_tensor, rgb_tensor = norm(edge_tensor).to(gpu_id), norm(rgb_tensor).to(gpu_id)
 		real_A = edge_tensor; real_B = rgb_tensor;
 
+		#Encoder & Generator Loss
+  
+		#first we pass real B to encoder in cvae-gan 
+		z_encoded,mu,logvar = encoder(real_B)
+		# next we pass sketch image, z to generator to get fakeB
+		fake_B_vae = generator(real_A, z_encoded)
+		#next, we calculate L1 loss
+		cvaegan_l1  = mae_loss(fake_B_vae,real_B)
+		#next we calculate kl div loss
+		KLD = (1/2) * (torch.sum(torch.exp(logvar) + mu.pow(2) - 1 - logvar)  )
+  
+		#we calculate l1 loss for clrgan
+  	    	z_random = torch.randn_like(z_encoded)
+        	fake_B_clr = generator(real_A,z_random)
+        	mu_clr, logvar_clr = encoder(fake_B_clr)
+		clrgan_l1 = mae_loss(mu_clr, z_random)
+		#back propagate
+
 		z_encoded,mu,logvar =  encoder(real_B)
 		fake_B_vae = generator(real_A,z_encoded)
 		z_random = torch.randn_like(z_encoded)
