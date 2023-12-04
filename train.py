@@ -84,17 +84,18 @@ loss_clrgan_l1_history = []
 
 
 # Training
-total_steps = len(loader)*num_epochs; step = 0
-for e in range(num_epochs):
-	start = time.time()
-	for idx, data in enumerate(loader):
-		edge_tensor, rgb_tensor = data
-		edge_tensor, rgb_tensor = norm(edge_tensor).to(gpu_id), norm(rgb_tensor).to(gpu_id)
-		real_A = edge_tensor; real_B = rgb_tensor;
+def train():
+	total_steps = len(loader)*num_epochs; step = 0
+	for e in range(num_epochs):
+		start = time.time()
+		for idx, data in enumerate(loader):  
+			edge_tensor, rgb_tensor = data
+			edge_tensor, rgb_tensor = norm(edge_tensor).to(gpu_id), norm(rgb_tensor).to(gpu_id)
+			real_A = edge_tensor; real_B = rgb_tensor;
 
-		#-------------------------------
-		#  Train Generator and Encoder
-		#------------------------------
+			#-------------------------------
+			#  Train Generator and Encoder
+			#------------------------------
 
 		#Encoder & Generator Loss
 
