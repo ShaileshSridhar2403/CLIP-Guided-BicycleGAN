@@ -86,8 +86,8 @@ loss_clrgan_l1_history = []
 # Training
 total_steps = len(loader)*num_epochs; step = 0
 for e in range(num_epochs):
-    start = time.time()
-    for idx, data in enumerate(loader):  
+	start = time.time()
+	for idx, data in enumerate(loader):  
 		edge_tensor, rgb_tensor = data
 		edge_tensor, rgb_tensor = norm(edge_tensor).to(gpu_id), norm(rgb_tensor).to(gpu_id)
 		real_A = edge_tensor; real_B = rgb_tensor;
@@ -111,27 +111,28 @@ for e in range(num_epochs):
 		#next we calculate kl div loss
 		KLD = (1/2) * (torch.sum(torch.exp(logvar) + mu.pow(2) - 1 - logvar)  )  #got cvaegan KL loss
 		#calculate cvae gan L2 loss
-		LOSS1 = 
-		LOSS2 = 
+		real_D_VAE_scores = D_VAE(real_B)
+		fake_D_VAE_scores = D_VAE(fake_B_vae)
+		VAE_GAN_loss =  mse_loss(fake_D_VAE_scores,torch.ones_like(fake_D_VAE_scores))
+		LR_GAN_loss = mse_loss(fake_D_LR_scores, torch.ones_like(fake_D_VAE_scores) )
   
-		loss_GE = LOSS1 +LOSS2 + cvaegan_l1*lambda_pixel + KLD * lambda_kl
+		loss_GE = VAE_GAN_loss + LR_GAN_loss + cvaegan_l1*lambda_pixel + KLD * lambda_kl
   
 		loss_GE.backward(retain_graph = True)
 		optimizer_E.step()
 		
   
 		#we calculate l1 loss for clrgan
-  	    z_random = torch.randn_like(z_encoded)
-        fake_B_clr = generator(real_A,z_random)
-        mu_clr, logvar_clr = encoder(fake_B_clr)
+		z_random = torch.randn_like(z_encoded)
+		fake_B_clr = generator(real_A,z_random)
+		mu_clr, logvar_clr = encoder(fake_B_clr)
 		clrgan_l1 = mae_loss(mu_clr, z_random)
-  		clrgan_l1.backward()
+		clrgan_l1.backward()
 		optimizer_G.step()
   
 		#optimizing discriminators
 		optimizer_D_VAE.zero_grad()
-		real_D_VAE_scores = D_VAE(real_B)
-		fake_D_VAE_scores = D_VAE(fake_B_vae)
+		
 		D_loss_cVAE = mse_loss(real_D_VAE_scores,torch.ones_like(real_D_VAE_scores)) + mse_loss(fake_D_VAE_scores,torch.zeros_like(fake_D_VAE_scores))
 		D_loss_cVAE.backward()
 		optimizer_D_VAE.step()
@@ -149,39 +150,39 @@ for e in range(num_epochs):
 		running_total_loss += (D_loss_cVAE +D_loss_cVAE + cvaegan_l1*lambda_pixel + KLD * lambda_kl + clrgan_l1*lambda_latent).item()
 		running_loss_cvaegan_l1 += cvaegan_l1.item()
 		running_loss_KLD += KLD.item()
-  		running_loss_D_loss_cVAE += D_loss_cVAE.item()
-    	running_loss_D_loss_cLRGAN += D_loss_cLRGAN.item()
+		running_loss_D_loss_cVAE += D_loss_cVAE.item()
+		running_loss_D_loss_cLRGAN += D_loss_cLRGAN.item()
 		running_loss_clrgan_l1 = clrgan_l1.item()
   
   
 		########## Visualization ##########
-        if step % report_feq == report_feq-1:
-            print('Train Epoch: {} {:.0f}% \tTotal Loss: {:.6f} \loss_cvaegan_l1: {:.6f}\loss_KLD: {:.6f}\D_loss_cVAE: {:.6f}\D_loss_cLRGAN: {:.6f}\loss_clrgan_l1: {:.6f}'.format
-                    (e+1, 100. * idx / len(loader), running_total_loss / report_feq,
-                    running_loss_cvaegan_l1/report_feq, running_loss_KLD/report_feq,
-                    running_loss_D_loss_cVAE/report_feq, running_loss_D_loss_cLRGAN/report_feq,
-                    running_loss_clrgan_l1/report_feq))
+		if step % report_feq == report_feq-1:
+			print('Train Epoch: {} {:.0f}% \tTotal Loss: {:.6f} \loss_cvaegan_l1: {:.6f}\loss_KLD: {:.6f}\D_loss_cVAE: {:.6f}\D_loss_cLRGAN: {:.6f}\loss_clrgan_l1: {:.6f}'.format
+					(e+1, 100. * idx / len(loader), running_total_loss / report_feq,
+					running_loss_cvaegan_l1/report_feq, running_loss_KLD/report_feq,
+					running_loss_D_loss_cVAE/report_feq, running_loss_D_loss_cLRGAN/report_feq,
+					running_loss_clrgan_l1/report_feq))
             
             #now store losses in list for plot
-            total_loss_history.append(running_total_loss/report_feq)
-            loss_cvaegan_l1_history.append(running_loss_cvaegan_l1/report_feq)
-            loss_KLD_history.append(running_loss_KLD/report_feq)
-            loss_D_loss_cVAE_history.append(running_loss_D_loss_cVAE/report_feq)
-            loss_D_loss_cLRGAN_history.append(running_loss_D_loss_cLRGAN/report_feq)
-            loss_clrgan_l1_history.append(running_loss_clrgan_l1/report_feq)
+			total_loss_history.append(running_total_loss/report_feq)
+			loss_cvaegan_l1_history.append(running_loss_cvaegan_l1/report_feq)
+			loss_KLD_history.append(running_loss_KLD/report_feq)
+			loss_D_loss_cVAE_history.append(running_loss_D_loss_cVAE/report_feq)
+			loss_D_loss_cLRGAN_history.append(running_loss_D_loss_cLRGAN/report_feq)
+			loss_clrgan_l1_history.append(running_loss_clrgan_l1/report_feq)
             
-            #now reset once saved
-            running_loss_D_A = 0
-            running_loss_D_B = 0
-            running_loss_GAN_AB = 0
-            running_loss_GAN_BA = 0
-            running_loss_cycle = 0
-            running_total_loss = 0
-            end = time.time()
-            print(e, step, 'T: ', end-start)
-            start = end
-            
-            #Visualize generated images
+			#now reset once saved
+			running_loss_D_A = 0
+			running_loss_D_B = 0
+			running_loss_GAN_AB = 0
+			running_loss_GAN_BA = 0
+			running_loss_cycle = 0
+			running_total_loss = 0
+			end = time.time()
+			print(e, step, 'T: ', end-start)
+			start = end
+
+			#Visualize generated images
             
             
 
