@@ -23,7 +23,7 @@ lambda_pixel =  10      # Loss weights for pixel loss
 lambda_latent = 0.5    # Loss weights for latent regression
 lambda_kl =  0.01      # Loss weights for kl divergence
 latent_dim =   8       # latent dimension for the encoded images from domain B
-gpu_id = '0'
+gpu_id = 'cuda:0'
 
 # Normalize image tensor
 def norm(image):
@@ -145,7 +145,7 @@ for e in range(num_epochs):
 		optimizer_D_LR.step()
 
   
-
+		"""
 		#add all losses
 		running_total_loss += (D_loss_cVAE +D_loss_cVAE + cvaegan_l1*lambda_pixel + KLD * lambda_kl + clrgan_l1*lambda_latent).item()
 		running_loss_cvaegan_l1 += cvaegan_l1.item()
@@ -184,7 +184,7 @@ for e in range(num_epochs):
 
 			#Visualize generated images
             
-            
+            """
 
 
 
