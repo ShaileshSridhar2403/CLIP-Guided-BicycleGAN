@@ -90,11 +90,16 @@ for e in range(num_epochs):
 		KLD = (1/2) * (torch.sum(torch.exp(logvar) + mu.pow(2) - 1 - logvar)  )
   
 		#we calculate l1 loss for clrgan
-  	    	z_random = torch.randn_like(z_encoded)
-        	fake_B_clr = generator(real_A,z_random)
-        	mu_clr, logvar_clr = encoder(fake_B_clr)
+		z_random = torch.randn_like(z_encoded)
+		fake_B_clr = generator(real_A,z_random)
+		mu_clr, logvar_clr = encoder(fake_B_clr)
 		clrgan_l1 = mae_loss(mu_clr, z_random)
 		#back propagate
+
+		loss_G = lambda_pixel*cvaegan_l1 + lambda_latent*clrgan_l1 + lambda_kl*KLD
+		loss_G.backward()
+		optimizer_G.step()
+		optimizer_E.step() 
 
 		z_encoded,mu,logvar =  encoder(real_B)
 		fake_B_vae = generator(real_A,z_encoded)
