@@ -134,63 +134,63 @@ class Generator(nn.Module):
         self.final_conv = nn.Conv2d(in_channels = 64, out_channels = channels,kernel_size = 1)
 
     def forward(self, x, z):
-        print("x shape initially",x.shape)  #torch.Size([4, 3, 256, 256])
-        print("z shape initially",z.shape)  #torch.Size([4, 8])
+        # print("x shape initially",x.shape)  #torch.Size([4, 3, 256, 256])
+        # print("z shape initially",z.shape)  #torch.Size([4, 8])
         
         # convert 2d z to 4d z so that it can be concatenated with image
         z = self.fc(z).view(z.size(0), 1, self.h, self.w)
-        print(z.shape)                      #torch.Size([4, 1, 256, 256])
+        # print(z.shape)                      #torch.Size([4, 1, 256, 256])
         
         #now this z is concatenated with x
         x1 = self.downconv1(torch.cat([x, z], dim=1))
-        print(x1.shape)                     #torch.Size([4, 64, 256, 256])
+        # print(x1.shape)                     #torch.Size([4, 64, 256, 256])
         x2 = self.maxpool(x1)
-        print(x2.shape)                     #torch.Size([4, 64, 128, 128])
+        # print(x2.shape)                     #torch.Size([4, 64, 128, 128])
         x3 = self.downconv2(x2)
-        print(x3.shape)                     #torch.Size([4, 128, 128, 128])
+        # print(x3.shape)                     #torch.Size([4, 128, 128, 128])
         x4 = self.maxpool(x3)
-        print(x4.shape)                     #torch.Size([4, 128, 64, 64])
+        # print(x4.shape)                     #torch.Size([4, 128, 64, 64])
         x5 = self.downconv3(x4)
-        print(x5.shape)                     #torch.Size([4, 256, 64, 64])
+        # print(x5.shape)                     #torch.Size([4, 256, 64, 64])
         x6 = self.maxpool(x5)
-        print(x6.shape)                     #torch.Size([4, 256, 32, 32])
+        # print(x6.shape)                     #torch.Size([4, 256, 32, 32])
         x7 = self.downconv4(x6)
-        print(x7.shape)                     #torch.Size([4, 512, 32, 32])
+        # print(x7.shape)                     #torch.Size([4, 512, 32, 32])
         x8 = self.maxpool(x7)
-        print(x8.shape)                     #torch.Size([4, 512, 16, 16])
+        # print(x8.shape)                     #torch.Size([4, 512, 16, 16])
         x9 = self.downconv5(x8)
-        print(x9.shape)                     #torch.Size([4, 1024, 16, 16])
+        # print(x9.shape)                     #torch.Size([4, 1024, 16, 16])
         
               
         #upsampling
         x = self.transposeconv1(x9)
-        print(x.shape)                      #torch.Size([4, 512, 32, 32])
+        # print(x.shape)                      #torch.Size([4, 512, 32, 32])
         #we need to crop x7 to fit x's size before we can perform skip connections concatenation
         y = crop_image(x7,x)
-        print(y.shape)                      #torch.Size([4, 512, 32, 32]) 
+        # print(y.shape)                      #torch.Size([4, 512, 32, 32]) 
         x = self.upconv1(torch.cat([x,y],1))  #This step involves concatenating 512 channels + 512 channels but i also do upconv so resultant will have 512 channels again as in unet paper
-        print(x.shape)                      #torch.Size([4, 512, 32, 32])
+        # print(x.shape)                      #torch.Size([4, 512, 32, 32])
         
         x = self.transposeconv2(x)   
-        print(x.shape)                      #torch.Size([4, 256, 64, 64])
+        # print(x.shape)                      #torch.Size([4, 256, 64, 64])
         #but before that we need to crop x5 to fit x's size
         y = crop_image(x5,x)
         x = self.upconv2(torch.cat([x,y],1))
-        print(x.shape)                      #torch.Size([4, 256, 64, 64])
+        # print(x.shape)                      #torch.Size([4, 256, 64, 64])
         
         x = self.transposeconv3(x) 
-        print(x.shape)                      #    torch.Size([4, 128, 128, 128])
+        # print(x.shape)                      #    torch.Size([4, 128, 128, 128])
         #but before that we need to crop x3 to fit x's size
         y = crop_image(x3,x)
         x = self.upconv3(torch.cat([x,y],1))
-        print(x.shape)                      #torch.Size([4, 128, 128, 128])
+        # print(x.shape)                      #torch.Size([4, 128, 128, 128])
         
         x = self.transposeconv4(x)  
-        print(x.shape)                      #torch.Size([4, 64, 256, 256]) 
+        # print(x.shape)                      #torch.Size([4, 64, 256, 256]) 
         #but before that we need to crop x1 to fit x's size
         y = crop_image(x1,x)
         x = self.upconv4(torch.cat([x,y],1))
-        print(x.shape)                      #torch.Size([4, 64, 256, 256])
+        # print(x.shape)                      #torch.Size([4, 64, 256, 256])
         
         #output
         x = self.final_conv(x)              #torch.Size([4, 3, 256, 256])
