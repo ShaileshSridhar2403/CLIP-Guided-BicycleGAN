@@ -91,92 +91,107 @@ def train(argpath = None):
         dataset = Edge2Shoe(img_dir)
         loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size)
 
-        total_steps = len(loader)*num_epochs; step = 0
-        for e in range(num_epochs):
-            start = time.time()
-            tqdm_loader = tqdm(loader, total=len(loader))
-            for idx, data in enumerate(tqdm_loader):
-                if idx >= 100:
-                    break
-                edge_tensor, rgb_tensor = data
-                edge_tensor, rgb_tensor = norm(edge_tensor).to(gpu_id), norm(rgb_tensor).to(gpu_id)
-                real_A = edge_tensor; real_B = rgb_tensor;
+    total_steps = len(loader)*num_epochs; step = 0
+    report_feq = 1000
+    total_loss_history = []
+    loss_cvaegan_l1_history = []
+    loss_KLD_history = []
+    loss_D_loss_cVAE_history = []
+    loss_D_loss_cLRGAN_history = []
+    loss_clrgan_l1_history = []
 
-                #-------------------------------
-                #  Train Generator and Encoder
-                #------------------------------
+    running_total_loss = 0
+    running_loss_cvaegan_l1 = 0
+    running_loss_KLD = 0
+    running_loss_D_loss_cVAE = 0
+    running_loss_D_loss_cLRGAN = 0
+    running_loss_clrgan_l1 = 0
+    for e in range(num_epochs):
+        # start = time.time()
+        tqdm_loader = tqdm(loader, total=len(loader))
+        for idx, data in enumerate(tqdm_loader):
+            # if idx >= 1000:
+            #     break
+            edge_tensor, rgb_tensor = data
+            edge_tensor, rgb_tensor = norm(edge_tensor).to(gpu_id), norm(rgb_tensor).to(gpu_id)
+            real_A = edge_tensor; real_B = rgb_tensor;
 
-                #Encoder & Generator Loss
+            #-------------------------------
+            #  Train Generator and Encoder
+            #------------------------------
 
-                #zero grad
-                optimizer_G.zero_grad()
-                optimizer_E.zero_grad()
-                optimizer_D_VAE.zero_grad()
-                optimizer_D_LR.zero_grad()
+            #Encoder & Generator Loss
 
-
-                #first we pass real B to encoder in cvae-gan
-                z_encoded,mu,logvar = encoder(real_B.detach())
-                # next we pass sketch image, z to generator to get fakeB
-                fake_B_vae = generator(real_A.detach(), z_encoded.detach())
-
-
-                #we calculate l1 loss for clrgan
-                z_random = torch.randn_like(z_encoded)
-                fake_B_clr = generator(real_A.detach(),z_random.detach())
-                _, mu_clr, logvar_clr2 = encoder(fake_B_clr.detach())
-                clrgan_l1 = mae_loss(mu_clr, z_random)
-                clrgan_l1.backward()
-                optimizer_G.step()
-
-
-                #next, we calculate cvaegan L1 loss
-                cvaegan_l1  = mae_loss(fake_B_vae.detach(),real_B.detach())  #got cvaegan L1 loss
-                #next we calculate kl div loss
-                KLD = (1/2) * (torch.sum(torch.exp(logvar) + mu.pow(2) - 1 - logvar)  )  #got cvaegan KL loss
-
-                #calculate cvae gan L2 loss
-                real_D_VAE_scores = D_VAE(real_B.detach())
-                fake_D_VAE_scores = D_VAE(fake_B_vae.detach())
-                real_D_LR_scores = D_LR(real_B.detach())
-                fake_D_LR_scores = D_LR(fake_B_clr.detach())
-
-                VAE_GAN_loss =  mse_loss(fake_D_VAE_scores.detach(),torch.ones_like(fake_D_VAE_scores))
-                LR_GAN_loss = mse_loss(fake_D_LR_scores.detach(), torch.ones_like(fake_D_VAE_scores) )
-
-                loss_GE = VAE_GAN_loss + LR_GAN_loss + cvaegan_l1*lambda_pixel + KLD * lambda_kl
-
-                loss_GE.backward()
-                optimizer_E.step()
+            #zero grad
+            optimizer_G.zero_grad()
+            optimizer_E.zero_grad()
+            optimizer_D_VAE.zero_grad()
+            optimizer_D_LR.zero_grad()
 
 
-                
-
-                #optimizing discriminators
-                
-
-                D_loss_cVAE = mse_loss(real_D_VAE_scores,torch.ones_like(real_D_VAE_scores)) + mse_loss(fake_D_VAE_scores,torch.zeros_like(fake_D_VAE_scores))
-                D_loss_cVAE.backward()
-                optimizer_D_VAE.step()
+            #first we pass real B to encoder in cvae-gan
+            z_encoded,mu,logvar = encoder(real_B.detach())
+            # next we pass sketch image, z to generator to get fakeB
+            fake_B_vae = generator(real_A.detach(), z_encoded.detach())
 
 
-                D_loss_cLRGAN = mse_loss(real_D_LR_scores,torch.ones_like(real_D_LR_scores)) + mse_loss(fake_D_LR_scores,torch.zeros_like(fake_D_LR_scores))
-                D_loss_cLRGAN.backward()
-                optimizer_D_LR.step()
+            #we calculate l1 loss for clrgan
+            z_random = torch.randn_like(z_encoded)
+            fake_B_clr = generator(real_A.detach(),z_random.detach())
+            _, mu_clr, logvar_clr2 = encoder(fake_B_clr.detach())
+            clrgan_l1 = mae_loss(mu_clr, z_random)
+            clrgan_l1.backward()
+            optimizer_G.step()
 
 
-                """
-                #add all losses
-                running_total_loss += (D_loss_cVAE +D_loss_cVAE + cvaegan_l1*lambda_pixel + KLD * lambda_kl + clrgan_l1*lambda_latent).item()
-                running_loss_cvaegan_l1 += cvaegan_l1.item()
-                running_loss_KLD += KLD.item()
-                running_loss_D_loss_cVAE += D_loss_cVAE.item()
-                running_loss_D_loss_cLRGAN += D_loss_cLRGAN.item()
-                running_loss_clrgan_l1 = clrgan_l1.item()
+            #next, we calculate cvaegan L1 loss
+            cvaegan_l1  = mae_loss(fake_B_vae.detach(),real_B.detach())  #got cvaegan L1 loss
+            #next we calculate kl div loss
+            KLD = (1/2) * (torch.sum(torch.exp(logvar) + mu.pow(2) - 1 - logvar)  )  #got cvaegan KL loss
+
+            #calculate cvae gan L2 loss
+            real_D_VAE_scores = D_VAE(real_B.detach())
+            fake_D_VAE_scores = D_VAE(fake_B_vae.detach())
+            real_D_LR_scores = D_LR(real_B.detach())
+            fake_D_LR_scores = D_LR(fake_B_clr.detach())
+
+            VAE_GAN_loss =  mse_loss(fake_D_VAE_scores.detach(),torch.ones_like(fake_D_VAE_scores))
+            LR_GAN_loss = mse_loss(fake_D_LR_scores.detach(), torch.ones_like(fake_D_VAE_scores) )
+
+            loss_GE = VAE_GAN_loss + LR_GAN_loss + cvaegan_l1*lambda_pixel + KLD * lambda_kl
+
+            loss_GE.backward()
+            optimizer_E.step()
 
 
-                ########## Visualization ##########
-                if step % report_feq == report_feq-1:
+            
+
+            #optimizing discriminators
+            
+
+            D_loss_cVAE = mse_loss(real_D_VAE_scores,torch.ones_like(real_D_VAE_scores)) + mse_loss(fake_D_VAE_scores,torch.zeros_like(fake_D_VAE_scores))
+            D_loss_cVAE.backward()
+            optimizer_D_VAE.step()
+
+
+            D_loss_cLRGAN = mse_loss(real_D_LR_scores,torch.ones_like(real_D_LR_scores)) + mse_loss(fake_D_LR_scores,torch.zeros_like(fake_D_LR_scores))
+            D_loss_cLRGAN.backward()
+            optimizer_D_LR.step()
+
+
+            # """
+            #add all losses
+            running_total_loss += (D_loss_cVAE +D_loss_cVAE + cvaegan_l1*lambda_pixel + KLD * lambda_kl + clrgan_l1*lambda_latent).item()
+            running_loss_cvaegan_l1 += cvaegan_l1.item()
+            running_loss_KLD += KLD.item()
+            running_loss_D_loss_cVAE += D_loss_cVAE.item()
+            running_loss_D_loss_cLRGAN += D_loss_cLRGAN.item()
+            running_loss_clrgan_l1 = clrgan_l1.item()
+
+            step += 1
+
+            ########## Visualization ##########
+            if step % report_feq == report_feq-1:
                 print('Train Epoch: {} {:.0f}% \tTotal Loss: {:.6f} \loss_cvaegan_l1: {:.6f}\loss_KLD: {:.6f}\D_loss_cVAE: {:.6f}\D_loss_cLRGAN: {:.6f}\loss_clrgan_l1: {:.6f}'.format
                         (e+1, 100. * idx / len(loader), running_total_loss / report_feq,
                         running_loss_cvaegan_l1/report_feq, running_loss_KLD/report_feq,
@@ -198,13 +213,32 @@ def train(argpath = None):
                 running_loss_GAN_BA = 0
                 running_loss_cycle = 0
                 running_total_loss = 0
-                end = time.time()
-                print(e, step, 'T: ', end-start)
-                start = end
+                # end = time.time()
+                # print(e, step, 'T: ', end-start)
+                # start = end
+                vis_fake_A = denorm(fake_B_vae[0].detach()).cpu().data.numpy().astype(np.uint8)
+                vis_fake_B = denorm(fake_B_clr[0].detach()).cpu().data.numpy().astype(np.uint8)
+                vis_real_B = denorm(real_B[0].detach()).cpu().data.numpy().astype(np.uint8)
+                vis_real_A = denorm(real_A[0].detach()).cpu().data.numpy().astype(np.uint8)
+                fig, axs = plt.subplots(2,2, figsize = (5,5))
 
+                axs[0,0].imshow(vis_real_A.transpose(1,2,0))
+                axs[0,0].set_title('real images')
+                axs[0,1].imshow(vis_fake_B.transpose(1,2,0))
+                axs[0,1].set_title('generated images')
+                axs[1,0].imshow(vis_real_B.transpose(1,2,0))
+                axs[1,1].imshow(vis_fake_A.transpose(1,2,0))
+                plt.show()
                 #Visualize generated images
+                # plt.imshow()
+                
+            
+    return total_loss_history,loss_cvaegan_l1_history,loss_KLD_history,loss_D_loss_cVAE_history,loss_D_loss_cLRGAN_history, loss_clrgan_l1_history
 
-                """
+
+
+
+
 
 
 
