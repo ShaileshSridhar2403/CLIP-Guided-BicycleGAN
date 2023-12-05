@@ -251,20 +251,20 @@ if __name__ == "__main__":
         res = D(im_test)
         print(res.shape)
 
-#code to test generator
-# Testing generator
-batch_size = 4
-channels = 3
-height = 256
-width = 256
-latent_dim = 8
-mock_images = torch.randn(batch_size, channels, height, width)
-mock_latent = torch.randn(batch_size, latent_dim)
+    #code to test generator
+    # Testing generator
+    batch_size = 4
+    channels = 3
+    height = 256
+    width = 256
+    latent_dim = 8
+    mock_images = torch.randn(batch_size, channels, height, width)
+    mock_latent = torch.randn(batch_size, latent_dim)
 
-model = Generator(latent_dim=latent_dim, img_shape=(channels, height, width))
-with torch.no_grad():
-    output = model(mock_images, mock_latent)
-    print("Output Shape:", output.shape)
+    model = Generator(latent_dim=latent_dim, img_shape=(channels, height, width))
+    with torch.no_grad():
+        output = model(mock_images, mock_latent)
+        print("Output Shape:", output.shape)
 
     
 

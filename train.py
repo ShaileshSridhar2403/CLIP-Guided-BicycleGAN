@@ -85,7 +85,12 @@ loss_clrgan_l1_history = []
 
 
 # Training
-def train():
+def train(argpath = None):
+	if argpath is not None:
+		img_dir = argpath
+		dataset = Edge2Shoe(img_dir)
+		loader = data.DataLoader(dataset, batch_size=batch_size)
+
 	total_steps = len(loader)*num_epochs; step = 0
 	for e in range(num_epochs):
 		start = time.time()
@@ -240,5 +245,5 @@ def train():
 				2. Save your model every few iterations
 			"""
 
-if _name_ == '_main_':
+if __name__ == '_main_':
     train()
