@@ -88,6 +88,9 @@ loss_clrgan_l1_history = []
 def train(argpath = None):
 	if argpath is not None:
 		img_dir = argpath
+		dataset = Edge2Shoe(img_dir)
+		loader = data.DataLoader(dataset, batch_size=batch_size)
+
 	total_steps = len(loader)*num_epochs; step = 0
 	for e in range(num_epochs):
 		start = time.time()
