@@ -91,6 +91,7 @@ def train(argpath = None):
 		dataset = Edge2Shoe(img_dir)
 		loader = data.DataLoader(dataset, batch_size=batch_size)
 
+	torch.autograd.set_detect_anomaly(True)
 	total_steps = len(loader)*num_epochs; step = 0
 	for e in range(num_epochs):
 		start = time.time()
@@ -111,7 +112,7 @@ def train(argpath = None):
 			optimizer_E.zero_grad()
 			optimizer_D_VAE.zero_grad()
 			optimizer_D_LR.zero_grad()
-            
+			
 
 			#first we pass real B to encoder in cvae-gan
 			z_encoded,mu,logvar = encoder(real_B)
@@ -121,10 +122,10 @@ def train(argpath = None):
 	
 			#we calculate l1 loss for clrgan
 			z_random = torch.randn_like(z_encoded)
-			fake_B_clr = generator(real_A,z_random)
+			fake_B_clr = generator(real_A,z_random.detach())
 			_, mu_clr, logvar_clr2 = encoder(fake_B_clr)
-			clrgan_l1 = mae_loss(mu_clr, z_random)
-			clrgan_l1.backward()
+			clrgan_l1 = mae_loss(mu_clr, z_random.detach())
+			clrgan_l1.backward(retain_graph = True)
 			optimizer_G.step()
 
 	
@@ -144,7 +145,7 @@ def train(argpath = None):
 
 			loss_GE = VAE_GAN_loss + LR_GAN_loss + cvaegan_l1*lambda_pixel + KLD * lambda_kl
 
-			loss_GE.backward()
+			loss_GE.backward(retain_graph = True)
 			optimizer_E.step()
 
 
@@ -245,5 +246,5 @@ def train(argpath = None):
 				2. Save your model every few iterations
 			"""
 
-if __name__ == '_main_':
-    train()
+if __name__ == '__main__':
+	train()

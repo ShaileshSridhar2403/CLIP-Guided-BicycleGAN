@@ -34,7 +34,7 @@ class Edge2Shoe(data.Dataset):
 
 
 if __name__ == '__main__':
-	img_dir = '/home/zlz/BicycleGAN/datasets/edges2shoes/train/' 
+	img_dir = 'C:/Users/yasha/Desktop/sem3/cis680/shailesh/CLIP-Guided-BicycleGAN/edges2shoes/edges2shoes/train/' 
 	dataset = Edge2Shoe(img_dir)
 	loader = data.DataLoader(dataset, batch_size=32)
 	for idx, data in enumerate(loader):
