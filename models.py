@@ -51,7 +51,7 @@ class Encoder(nn.Module):
         logvar = self.fc_logvar(out)
         z = self.reparameterization(mu,logvar)
 
-        return z
+        return z,mu,logvar
 
 
 ##############################
