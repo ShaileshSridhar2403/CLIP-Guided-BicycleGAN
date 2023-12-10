@@ -25,11 +25,8 @@ lambda_latent = 0.5    # Loss weights for latent regression
 lambda_kl =  0.01      # Loss weights for kl divergence
 latent_dim =   8       # latent dimension for the encoded images from domain B
 
-if(device) == 'cuda:0':
-  gpu_id='cuda:0'
-else:
-  gpu_id = "cpu"
-	
+gpu_id = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
 #gpu_id = 'cuda:0'
 
 # Normalize image tensor
