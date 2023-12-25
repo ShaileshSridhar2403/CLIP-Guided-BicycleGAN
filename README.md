@@ -4,9 +4,11 @@ Multimodal Image translation with the additional ability to be able to guide gen
 
 <img src="./images/BicycleGANOutputs.png" width="500px"></img>
 
+Diverse Outputs from Edge2Shoes
+
 <img src="./images/BasicPrompts.png" width="500px"></img>
 
-
+CLIP Guided BicycleGAN Outputs
 
 # Running the Code
 The notebook has been set up so that it can be run from the top sequentially.
