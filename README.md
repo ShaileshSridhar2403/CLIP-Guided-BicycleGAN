@@ -47,7 +47,7 @@ BicycleGAN allows us to generate diverse outputs given an image in the input dom
 
 
 
-Please see the notebook and report for more details! You may also check out our video. (final_project_vide.mp4)
+Please see the notebook and report for more details! You may also check out our video. (final_project_video.mp4)
 
 # Running the Code
 The notebook has been set up so that it can be run from the top sequentially.
