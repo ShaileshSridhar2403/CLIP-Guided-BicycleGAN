@@ -1,6 +1,6 @@
 # CLIP-Guided-BicycleGAN
 
-Multimodal Image translation with the additional ability to be able to guide generated outputs using CLIP. 
+Multimodal Image translation with a BicycleGAN implemented from scratch. Added additional ability to guide generated outputs using CLIP. 
 
 
 
