@@ -13,7 +13,7 @@ Multimodal Image translation with the additional ability to be able to guide gen
 
 
 
-### *Diverse Outputs from Edge2Shoes*
+### *Diverse Outputs after applying our BicycleGAN on Edge2Shoes*
 |<img src="./images/BicycleGANOutputs.png" width="500px"></img> | 
 |:--:| 
 
