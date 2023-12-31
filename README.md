@@ -8,7 +8,7 @@ Multimodal Image translation with a BicycleGAN implemented from scratch. Added a
   
 |<img src="./images/BicycleGANArchitecture.png" width="500px"></img>| 
 |:--:| 
-|*BicycleGAN Architecture from Toward Multimodal Image-to-Image Translation (Zhue et al.)*|
+|*BicycleGAN schematic from Toward Multimodal Image-to-Image Translation (Zhue et al.)*|
 
 
 
